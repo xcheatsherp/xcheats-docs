@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Lua API - XCheats Docs</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/docco.min.css">
+
+        <script src="../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../js/bootstrap.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="..">XCheats Docs</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="navitem">
+                                <a href=".." class="nav-link">Welcome to the XCheats Documentation</a>
+                            </li>
+                            <li class="navitem active">
+                                <a href="./" class="nav-link">Lua API</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" href=".." class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" class="nav-link disabled">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="1"><a href="#lua-api" class="nav-link">Lua API</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-level="2"><a href="#usage" class="nav-link">Usage</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#natives" class="nav-link">Natives</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#structures" class="nav-link">Structures</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#list-mode" class="nav-link">List Mode</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#imgui-mode" class="nav-link">ImGui Mode</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-level="2"><a href="#xcheats-functions" class="nav-link">XCheats Functions</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="lua-api">Lua API</h1>
+<p>XCheats offers a robust lua API which allows semi-arbitrary interaction with the RAGE engine via a set of "natives" declared below in addition to several helper functions also shown below.</p>
+<h2 id="usage">Usage</h2>
+<p>Every lua script must contain the following functions:</p>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Usage</th>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Initialise</td>
+<td>Called once when the script is loaded. This is where you add options to be drawn in list mode and perform other initialisation functions. This is not called from a script thread.</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>OnGameTick</td>
+<td>This is called once per frame from a script thread. Here you may call natives or anything that requires a script context.</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>OnD3dTick</td>
+<td>This is called one per frame from the DX hook. Here you may call ImGui functions. Any natives called here must be passed to queue_job to be executed in a script context.</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>See this example script:</p>
+<pre><code>local suicide_loop = false
+
+
+function OnD3dTick()
+
+ if (ImGui.Button(&quot;Suicide&quot;)) then
+ xc.queue_job(function() entity.SET_ENTITY_HEALTH(player.PLAYER_PED_ID(), 0, 0) end)
+ end
+
+end
+
+
+function OnGameTick()
+
+ if (suicide_loop) then
+ entity.SET_ENTITY_HEALTH(player.PLAYER_PED_ID(), 0, 0)
+ end
+
+end
+
+function Initialise()
+
+ xc.add_feature(&quot;Suicide&quot;, &quot;action&quot;, 0, function() entity.SET_ENTITY_HEALTH(player.PLAYER_PED_ID(), 0, 0) end)
+ xc.add_feature(&quot;Suicide loop&quot;, &quot;toggle&quot;, 0, function(on) suicide_loop = on end)
+end
+</code></pre>
+<h2 id="natives">Natives</h2>
+<p>As many natives have been exposed to the lua API as possible. However, due to some natives taking pointers as parameters or returning pointers, some have been modified to either take different parameters or return a dereferenced result. This is due to the lua language being a (far) higher level than c++.</p>
+<ul>
+<li>
+<p>For native functions that take pointers as non-output parameters,
+   they have been edited to instead take a value where there would
+   otherwise be a pointer. <code>entity.DELETE_ENTITY</code> instead takes an
+   entity as a parameter rather than a pointer to an entity which would
+   be impossible to get via lua (currently).</p>
+</li>
+<li>
+<p>For functions which take pointers as output parameters, such as
+   <code>graphics.GET_SCREEN_COORD_FROM_WORLD_COORD</code> which would usually
+   take the parameters <code>(float worldX, float worldY, float worldZ,
+   float* screenX, float* screenY)</code> have all been modified to take only the parameters which are <strong>not</strong> pointers in contigous order.
+   Now the function exposed to lua takes these parameters <code>(float worldX, float worldY, float worldZ)</code>.</p>
+</li>
+<li>
+<p>For functions which take an array as a parameter in the form of a pointer of type T and and int of the array size, the lua API abstracts this in a similar way as shown above. Instead, the native will take the standard lua vector container as a parameter. For example see <code>script.TRIGGER_SCRIPT_EVENT(int eventId, Player target, Vector parameters)</code> in use:<br />
+<code>//Kick from vehicle takes no additional parameters</code><br />
+<code>script.TRIGGER_SCRIPT_EVENT(-1333236192, player.PLAYER_ID(), {})</code></p>
+</li>
+<li>
+<p>For return values of a function taking pointer output parameters, a tuple is returned in the order
+   of native result followed by the output parameters in their original
+   order:
+           <code>local coords = entity.GET_ENTITY_COORDS(player.PLAYER_PED_ID(), 1)
+        local result, x, y = graphics.GET_SCREEN_COORD_FROM_WORLD_COORD(coords.x, coords.y, coords.z)</code></p>
+</li>
+</ul>
+<h3 id="-unaltered-natives">- <a href="../files/natives.txt">Unaltered Natives</a></h3>
+<pre><code>  are natives that are ready to use without additional consideration
+</code></pre>
+<h3 id="-pointer-natives">- <a href="../files/native_exceptions.txt">"Pointer Natives"</a></h3>
+<pre><code>  are the aforementioned natives with modified return values and/or parameters
+</code></pre>
+<h2 id="structures">Structures</h2>
+<ul>
+<li>
+<h3 id="v3">v3</h3>
+<p>Returned by natives, often representing coordinates or rotation.<br />
+<code>float x</code><br />
+<code>float y</code><br />
+<code>float z</code><br />
+<code>constructor (x, y, z)</code></p>
+</li>
+<li>
+<h3 id="imvec2">ImVec2</h3>
+<p>Used by ImGui functions to represent sizes or coordinates.<br />
+<code>float z</code><br />
+<code>float y</code><br />
+<code>constructor (x, y)</code></p>
+</li>
+<li>
+<h3 id="imvec4">ImVec4</h3>
+A more versatile structure used by ImGui functions to represent paths, colours, etc.<br />
+<code>float z</code><br />
+<code>float y</code><br />
+<code>float y</code><br />
+<code>float w</code><br />
+<code>constructor (x, y, z, w)</code></li>
+</ul>
+<h2 id="list-mode">List Mode</h2>
+<p>XCheats has two separate user interfaces, one is a traditional "list" ui that is drawn with natives and operable with controller and/or keyboard, the other using the mouse and keyboard using the popular library ImGui.
+The lua API allows deep integration with list mode.<br />
+There are a few key functions for list mode integration: </p>
+<ul>
+<li>
+<p><code>add_feature(String name, String type, Int parent, Function callback)</code>
+  <code>name</code> is the left text to be drawn in the option entry, <code>parent</code> is an integer representing the submenu that owns the option <strong>You may pass 0 to parent for the option to be drawn in the scripts submenu</strong>. 
+  <code>callback</code> is a function called with different parameters depending on the option type. See below
+  <code>type</code> may be any of the following:</p>
+<ul>
+<li><strong>action</strong>
+   This is a standard option, when the enter key is pressed over this option the callback is executed in a script thread.
+   <strong>The <code>callback</code> takes no parameters in an <code>action</code> option</strong></li>
+<li><strong>submenu</strong>
+This creates a new submenu with the <code>parent</code> parameter being a unique number. Once you create the submenu, you may draw options with this submenu as the parent building your own custom hierarchy. The <code>callback</code> is discarded. You should not create multiple submenus with the same id.</li>
+<li><strong>player_action</strong>
+This is the same as <code>action</code> but is shown under the selected player submenu alongside XCheats' own options</li>
+<li><strong>toggle</strong>
+  This is a togglable (boolean) option with a special callback. This option is the same as <code>action</code> other than the <code>callback</code> takes a boolean parameter containing the state of the option when it is updated. For example if the option is toggled on then the callback is executed with the parameter being false. See usage of this option in the example script above.</li>
+<li><strong>player_toggle</strong>
+ This is the same as <code>toggle</code> but is shown under the selected player submenu alongside XCheats' own options</li>
+</ul>
+</li>
+<li>
+<p><code>add_int_feature(String name, Int parent, Int min, Int max, Int step, Int value, Function(Int value) callback)</code>
+ This displays an option containing an integer value that is incremented or decremented and is a specialised form of <code>add_feature</code> of <code>toggle</code> type instead guarding an integer rather than a boolean. Each time the integer is incremented or decremented or if the option is entered, the callback function is called with the current value as a paremeter. <code>Step</code> is the amount the option is changed by on a horizontal action.</p>
+</li>
+<li><code>add_float_feature(String name, Int parent, Float min, Float max, Float step, Float value, Function(Float value) callback)</code>
+ This option is identical to <code>add_int_feature</code> but instead guards a signed floating point number rather than an integer.</li>
+<li><code>add_sub_feature(String name, Int parent, Int target, Function() callback)</code>
+  This is identical to a regular <code>action</code> but instead jumps to the target submenu when the option is executed. This is a key function for building your own custom hierarchy of options and submenus.</li>
+</ul>
+<h2 id="imgui-mode">ImGui Mode</h2>
+<p>This mode is less flexible in terms of integration with the XCheats lua API and the existing gui. You cannot interact with ImGui submenus but you may create windows, draw buttons etc. outside of the XCheats window. See the <a href="https://github.com/ocornut/imgui">ImGui Documentation</a> for more info about the library and functions exposed by the lua API.
+ These options belong to the ImGui namespace, see the example script above for demo usage.
+<strong>These bindings are not to be confused with other ImGui-&gt;lua bindings and are unique to XCheats</strong>.</p>
+<p><code>bool Begin(String name, int options)</code><br />
+<code>void End()</code><br />
+<code>bool Button(String label, ImVec2 colour = ImVec2(0, 0))</code><br />
+<code>void Text(String text)</code><br />
+<code>void TextWrapped(String text)</code><br />
+<code>bool Selectable(String label, bool selected, int flags, ImVec2 size)</code><br />
+<code>bool, int SliderInt(String label, int v, int min, int max) - the bool is true if the int has changed, the int is the value.</code><br />
+<code>bool, float SliderFloat(String label, float v, float min, float max) - the bool is true if the float has changed, the float is the value.</code><br />
+<code>bool TreeNode(String label)</code><br />
+<code>void TreePop()</code><br />
+<code>int Combo(String label, int current, Vector options) returns the current option index</code><br />
+<code>bool ListBoxHeader(String label, ImVec2 size)</code><br />
+<code>void ListBoxFooter()</code><br />
+<code>bool IsItemHovered()</code><br />
+<code>void BeginGroup()</code><br />
+<code>void EndGroup()</code><br />
+<code>bool BeginChild(String label, ImVec2 size)</code><br />
+<code>void EndChild()</code><br />
+<code>bool CollapsingHeader(String label, int flags)</code><br />
+<code>bool, bool Checkbox(String label, bool toggle) . First bool is true if the checkbox has been toggled this frame, second bool is the state of the toggle variable</code><br />
+<code>ImVec2 GetCursorPos()</code> <br />
+<code>void SetCursorPos(ImVec2 pos)</code>   </p>
+<h2 id="xcheats-functions">XCheats Functions</h2>
+<p>XCheats offers a limited set of functionality that is not acheivable through natives alone. The number of helper functions is always growing and new ones may be added on request.</p>
+<ul>
+<li><code>queue_job(Function callback())</code> schedules the passed function for execution within a script thread / context immediately. It does <strong>not</strong> guarantee real time or immediate execution.</li>
+<li><code>wait(int milliseconds)</code> is a blocking function that yields the script thread for N milliseconds. <strong>It must only be called from within <code>OnGameTick</code> or from within a function passed to <code>queue_job</code></strong>. In other words, it can only be executed from within a script thread.</li>
+<li><code>log(String message)</code> outputs the message to the XCheats console &amp; Log file.</li>
+</ul></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js" defer></script>
+        <script src="../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
