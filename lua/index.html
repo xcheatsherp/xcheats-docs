@@ -152,8 +152,12 @@
 
 function OnD3dTick()
 
- if (ImGui.Button(&quot;Suicide&quot;)) then
- xc.queue_job(function() entity.SET_ENTITY_HEALTH(player.PLAYER_PED_ID(), 0, 0) end)
+
+ if (ImGui.Begin(&quot;Demo&quot;, 0)) then
+  if (ImGui.Button(&quot;Suicide&quot;)) then
+   xc.queue_job(function() entity.SET_ENTITY_HEALTH(player.PLAYER_PED_ID(), 0, 0) end)
+  end
+ ImGui.End()
  end
 
 end
